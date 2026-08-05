@@ -1,0 +1,15 @@
+[project]
+name = "rag-against-the-machine"
+version = "0.1.0"
+description = "Build a Retrieval-Augmented Generation system that answers questions about codebases by retrieving relevant information and generating evidence-based responses, implementing intelligent chunking, efficient retrieval (TF-IDF/BM25)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "flake8==7.3.0",
+    "mypy==1.20.2",
+    "pydantic==2.13.3",
+    "fire==0.7.1",
+    "langchain-text-splitters==1.1.2",
+    "tqdm==4.70",
+    "BM25==0.3.10"
+    ]
