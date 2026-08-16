@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import List, Tuple
 from src.models import MinimalSource
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter, Language)
 
 
 def get_source_files(raw_dir: str = "data/raw"
@@ -60,8 +61,28 @@ def chunk_markdown(file_path: Path, max_chunk_size: int
     return chunks
 
 
-def chunk_python(file_path: Path, max_chunk_size: int
-                 ) -> List[MinimalSource]:
+def chunk_python(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
+    text = file_path.read_text()
+
+    python_splitter = RecursiveCharacterTextSplitter.from_language(
+        language=Language.PYTHON,
+        chunk_size=max_chunk_size,
+        chunk_overlap=30,
+        add_start_index=True
+    )
+
+    documents = python_splitter.create_documents([text])
+
+    for doc in documents:
+        start_idx: int = doc.metadata.get("start_index", 0)
+        end_idx: int = start_idx + len(doc.page_content)
+
+        source = MinimalSource(
+            file_path=str(file_path),
+            first_character_index=start_idx,
+            last_character_index=end_idx
+        )
+        chunks.append(source)
 
     return chunks
