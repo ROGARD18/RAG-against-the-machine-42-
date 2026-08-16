@@ -5,7 +5,11 @@ install:
 	uv sync
 
 run:
-	@uv run python3 -m src index 100
+	@uv run python3 -m src search 'How to configure openAI server ?' --k 100
+
+test:
+	@read -p "Entrez les arguments (ex: search 'ma question' --k 5) : " args; \
+	uv run python -m src $$args
 
 debug:
 	@echo "Running in debug mode..."

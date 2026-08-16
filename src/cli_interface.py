@@ -57,7 +57,22 @@ class Cli:
         print("Ingestion complete! Indices saved under data/processed/")
 
     def search(self, query: str, k: int) -> None:
-        pass
+        index_path = Path("data/processed/index.pkl")
+
+        if not index_path.exists():
+            print("Error: Index does not exist. Start with 'index' command")
+            return
+        
+        with open(index_path, "rb") as f:
+            data = pickle.load(f)
+        all_chunks = data["chunks"]
+        bm25 = data["bm25"]
+
+        tokenized_query = query.lower().split()
+        best_chunks = bm25.get_top_n(tokenized_query, all_chunks, n=k)
+
+        for chunk in best_chunks:
+            print(f"{chunk.file_path} [{chunk.first_character_index}:{chunk.last_character_index}]")
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:
