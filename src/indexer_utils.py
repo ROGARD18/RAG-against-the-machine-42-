@@ -39,9 +39,9 @@ def chunk_markdown(file_path: Path, max_chunk_size: int
         headers_to_split_on=headers_to_split_on, strip_headers=False
     )
     md_header_splits = markdown_splitter.split_text(text)
-    chunk_overlap = 30
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=max_chunk_size, chunk_overlap=chunk_overlap,
+        chunk_size=max_chunk_size,
+        chunk_overlap=int(max_chunk_size * 0.1),
         add_start_index=True
 
     )
@@ -68,7 +68,7 @@ def chunk_python(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     python_splitter = RecursiveCharacterTextSplitter.from_language(
         language=Language.PYTHON,
         chunk_size=max_chunk_size,
-        chunk_overlap=30,
+        chunk_overlap=int(max_chunk_size / 5),
         add_start_index=True
     )
 
