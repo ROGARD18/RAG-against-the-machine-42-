@@ -123,10 +123,17 @@ class Cli:
 
         print(f"Saved student_search_results to {save_directory}")
 
-    def answer(self, query: str, k: int) -> None:
-        chunks: List = self._find_k_chunks(query=query, k=k)
+    def answer(self, query: str, k: int = 5) -> None:
+        try:
+            chunks: List = self._find_k_chunks(query=query, k=k)
+        except FileNotFoundError as e:
+            print(e)
+            return
+
         reversed_chunks = chunks[::-1]
-        print(self.generator.generate(query=query, chunks=reversed_chunks))
+        answer = self.generator.generate(query=query, chunks=reversed_chunks)
+        print("---\n\n\n\nAnswer:\n")
+        print(answer)
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
