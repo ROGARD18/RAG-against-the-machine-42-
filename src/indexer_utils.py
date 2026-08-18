@@ -24,28 +24,17 @@ def get_source_files(raw_dir: str = "data/raw"
     return (python_files, markdown_files)
 
 
-def chunk_markdown(file_path: Path, max_chunk_size: int
-                   ) -> List[MinimalSource]:
+def chunk_markdown(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
-
     text = file_path.read_text(encoding="utf-8")
 
-    headers_to_split_on = [
-        ("#", "Header 1"),
-        ("##", "Header 2"),
-        ("###", "Header 3"),
-    ]
-    markdown_splitter = MarkdownHeaderTextSplitter(
-        headers_to_split_on=headers_to_split_on, strip_headers=False
-    )
-    md_header_splits = markdown_splitter.split_text(text)
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=max_chunk_size,
         chunk_overlap=int(max_chunk_size * 0.1),
         add_start_index=True
-
     )
-    documents = text_splitter.split_documents(md_header_splits)
+
+    documents = text_splitter.create_documents([text])
 
     for doc in documents:
         start_idx: int = doc.metadata.get("start_index", 0)

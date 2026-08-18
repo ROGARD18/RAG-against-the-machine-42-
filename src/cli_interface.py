@@ -7,6 +7,7 @@ from rank_bm25 import BM25Okapi
 from pathlib import Path
 from tqdm import tqdm
 from typing import List, Dict
+import re
 
 from src.models import (
     MinimalSource, MinimalAnswer, MinimalSearchResults,
@@ -28,6 +29,7 @@ class Cli:
 
     def index(self, max_chunk_size: int = 2000) -> None:
         python_files, markdown_files = get_source_files()
+        print(f"Fichiers trouvés -> Python : {len(python_files)} | Markdown : {len(markdown_files)}")
         all_files = python_files + markdown_files
 
         all_chunks: List[MinimalSource] = []
@@ -39,12 +41,16 @@ class Cli:
                 all_chunks.extend(chunk_python(file_path=file, max_chunk_size=max_chunk_size))
 
         tokens_list = []
+        file_cache = {}
 
         for chunk in tqdm(all_chunks, desc="Tokenizing"):
-            file_text = Path(chunk.file_path).read_text()
+            if chunk.file_path not in file_cache:
+                file_cache[chunk.file_path] = Path(chunk.file_path).read_text(encoding="utf-8")
+
+            file_text = file_cache[chunk.file_path]
             chunk_text = file_text[chunk.first_character_index:chunk.last_character_index]
 
-            tokens = chunk_text.lower().split()
+            tokens = [word for word in re.findall(r'\w+', chunk_text.lower()) if len(word) > 2]
             tokens_list.append(tokens)
 
         bm25 = BM25Okapi(tokens_list)
@@ -73,7 +79,7 @@ class Cli:
         all_chunks = data["chunks"]
         bm25 = data["bm25"]
 
-        tokenized_query = query.lower().split()
+        tokenized_query = [word for word in re.findall(r'\w+', query.lower()) if len(word) > 2]
         best_chunks = bm25.get_top_n(tokenized_query, all_chunks, n=k)
 
         return best_chunks
@@ -120,9 +126,7 @@ class Cli:
 
     def answer(self, query: str, k: int) -> None:
         chunks: List = self._find_k_chunks(query=query, k=k)
-        print("******************************")
         print(self.generator.generate(query=query, chunks=chunks))
-        print("******************************")
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
