@@ -29,7 +29,6 @@ class Cli:
 
     def index(self, max_chunk_size: int = 2000) -> None:
         python_files, markdown_files = get_source_files()
-        print(f"Fichiers trouvés -> Python : {len(python_files)} | Markdown : {len(markdown_files)}")
         all_files = python_files + markdown_files
 
         all_chunks: List[MinimalSource] = []
