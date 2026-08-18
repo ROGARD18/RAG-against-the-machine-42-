@@ -11,6 +11,9 @@ test:
 	@read -p "Entrez les arguments (ex: search 'ma question' --k 5) : " args; \
 	uv run python -m src $$args
 
+test1:
+	uv run python -m src answer "How to configure OpenAi server ?" --k 1
+
 debug:
 	@echo "Running in debug mode..."
 	uv run python3 -m pdb -m src

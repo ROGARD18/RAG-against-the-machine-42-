@@ -1,6 +1,7 @@
 import fire
 import json
 import pickle
+from src.llm_model import LlmModel
 from tqdm import tqdm
 from rank_bm25 import BM25Okapi
 from pathlib import Path
@@ -21,6 +22,9 @@ class CliError(Exception):
 
 class Cli:
     """Interface class"""
+
+    def __init__(self):
+        self.generator = LlmModel()
 
     def index(self, max_chunk_size: int = 2000) -> None:
         python_files, markdown_files = get_source_files()
@@ -57,7 +61,7 @@ class Cli:
 
         print(f"Ingestion complete! Indexed {len(all_chunks)} under data/processed/")
 
-    def _run_search(self, query: str, k: int = 5) -> List:
+    def _find_k_chunks(self, query: str, k: int = 5) -> List:
         index_path = Path("data/processed/index.pkl")
 
         if not index_path.exists():
@@ -76,7 +80,7 @@ class Cli:
 
     def search(self, query: str, k: int = 5) -> None:
         try:
-            best_chunks = self._run_search(query, k)
+            best_chunks = self._find_k_chunks(query, k)
         except FileNotFoundError as e:
             print(e)
             return
@@ -96,7 +100,7 @@ class Cli:
                 question_id: str | None = question.get("question_id", None)
                 if query:
                     try:
-                        result = self._run_search(query, k)
+                        result = self._find_k_chunks(query, k)
                     except FileNotFoundError as e:
                         print(e)
                         return
@@ -104,7 +108,6 @@ class Cli:
                             question_id=question_id,
                             question=query,
                             retrieved_sources=result))
-            break
 
         save_path = Path(save_directory)
         save_path.mkdir(parents=True, exist_ok=True)
@@ -116,7 +119,10 @@ class Cli:
         print(f"Saved student_search_results to {save_directory}")
 
     def answer(self, query: str, k: int) -> None:
-        pass
+        chunks: List = self._find_k_chunks(query=query, k=k)
+        print("******************************")
+        print(self.generator.generate(query=query, chunks=chunks))
+        print("******************************")
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:

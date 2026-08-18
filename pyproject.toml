@@ -11,5 +11,7 @@ dependencies = [
     "fire==0.7.1",
     "langchain-text-splitters==1.1.2",
     "tqdm==4.70",
-    "rank-bm25==0.2.2"
+    "rank-bm25==0.2.2",
+    "transformers==5.15",
+    "torch==2.13"
     ]
