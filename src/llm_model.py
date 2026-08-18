@@ -94,7 +94,5 @@ class LlmModel:
     def _get_chunk_text(self, chunk) -> str:
         with open(chunk.file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        print("---")
         print(content[chunk.first_character_index:chunk.last_character_index])
-        print("---")
         return content[chunk.first_character_index:chunk.last_character_index]

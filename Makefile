@@ -12,7 +12,7 @@ test_args:
 	uv run python -m src $$args
 
 test1:
-	uv run python -m src answer "How to configure OpenAi server ?" --k 5
+	uv run python -m src answer "How to configure OpenAi server ?" --k 15
 
 debug:
 	@echo "Running in debug mode..."

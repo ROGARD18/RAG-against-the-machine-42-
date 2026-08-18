@@ -125,7 +125,8 @@ class Cli:
 
     def answer(self, query: str, k: int) -> None:
         chunks: List = self._find_k_chunks(query=query, k=k)
-        print(self.generator.generate(query=query, chunks=chunks))
+        reversed_chunks = chunks[::-1]
+        print(self.generator.generate(query=query, chunks=reversed_chunks))
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
