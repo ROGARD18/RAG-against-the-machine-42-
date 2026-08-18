@@ -116,7 +116,7 @@ class Cli:
 
         save_path = Path(save_directory)
         save_path.mkdir(parents=True, exist_ok=True)
-        output_file = save_path / "student_search_results.json"
+        output_file = save_path / "dataset_docs_public.json"
 
         with open(output_file, "w") as f:
             json.dump([r.model_dump() for r in search_results], f, indent=4)
@@ -137,7 +137,54 @@ class Cli:
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
-        pass
+        input_path = Path(student_search_results_path)
+        if not input_path.exists():
+            print(f"Error: File '{student_search_results_path}' does not exist.")
+            return
+
+        with open(input_path, "r", encoding="utf-8") as f:
+            search_results_data = json.load(f)
+
+        answers_results: List[StudentSearchResultsAndAnswer] = []
+
+        for item in tqdm(search_results_data, desc="Generating answers"):
+            question_id = item.get("question_id")
+            question = item.get("question")
+            retrieved_sources_raw = item.get("retrieved_sources", [])
+
+            chunks = [
+                MinimalSource(
+                    file_path=src["file_path"],
+                    first_character_index=src["first_character_index"],
+                    last_character_index=src["last_character_index"]
+                )
+                for src in retrieved_sources_raw
+            ]
+
+            reversed_chunks = chunks[::-1]
+
+            generated_answer = self.generator.generate(
+                query=question,
+                chunks=reversed_chunks
+            )
+
+            answers_results.append(
+                StudentSearchResultsAndAnswer(
+                    question_id=question_id,
+                    question=question,
+                    retrieved_sources=chunks,
+                    answer=generated_answer
+                )
+            )
+
+        save_path = Path(save_directory)
+        save_path.mkdir(parents=True, exist_ok=True)
+        output_file = save_path / "student_answers.json"
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump([r.model_dump() for r in answers_results], f, indent=4)
+
+        print(f"Saved student answers to {output_file}")
 
     def evaluate(self, student_search_results_path: str,
                  dataset_path: str) -> None:
