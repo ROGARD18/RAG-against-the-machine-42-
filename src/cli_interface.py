@@ -95,33 +95,42 @@ class Cli:
 
     def search_dataset(self, dataset_path: str, k: int,
                        save_directory: str) -> None:
-        search_results: List[MinimalSearchResults] = []
 
-        with open(dataset_path, "r") as f:
+        with open(dataset_path, "r", encoding="utf-8") as f:
             questions_dict = json.load(f)
-        for _, questions in questions_dict.items():
+
+        search_results_list = []
+
+        for key, questions in questions_dict.items():
             for question in questions:
                 query: str | None = question.get("question", None)
                 question_id: str | None = question.get("question_id", None)
                 if query:
                     try:
-                        result = self._find_k_chunks(query, k)
+                        result_chunks = self._find_k_chunks(query, k)
                     except FileNotFoundError as e:
                         print(e)
                         return
-                    search_results.append(MinimalSearchResults(
+
+                    search_results_list.append(MinimalSearchResults(
                             question_id=question_id,
                             question=query,
-                            retrieved_sources=result))
+                            retrieved_sources=[chunk.model_dump() for chunk in result_chunks]
+                    ).model_dump())
+
+        final_output = {
+            "search_results": search_results_list,
+            "k": k
+        }
 
         save_path = Path(save_directory)
         save_path.mkdir(parents=True, exist_ok=True)
-        output_file = save_path / "dataset_docs_public.json"
+        output_file = save_path / Path(dataset_path).name 
 
-        with open(output_file, "w") as f:
-            json.dump([r.model_dump() for r in search_results], f, indent=4)
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(final_output, f, indent=4)
 
-        print(f"Saved student_search_results to {save_directory}")
+        print(f"Saved student_search_results to {output_file}")
 
     def answer(self, query: str, k: int = 5) -> None:
         try:
@@ -147,42 +156,46 @@ class Cli:
 
         answers_results: List[StudentSearchResultsAndAnswer] = []
 
-        for item in tqdm(search_results_data, desc="Generating answers"):
-            question_id = item.get("question_id")
-            question = item.get("question")
-            retrieved_sources_raw = item.get("retrieved_sources", [])
+        output_dict = {}
+        for key, items in search_results_data.items():
+            for item in tqdm(items, desc="Generating answers"):
+                question_id: str | None = item.get("question_id", None)
+                question: str | None = item.get("question", None)
+                retrieved_sources_raw = item.get("retrieved_sources", [])
 
-            chunks = [
-                MinimalSource(
-                    file_path=src["file_path"],
-                    first_character_index=src["first_character_index"],
-                    last_character_index=src["last_character_index"]
+                chunks = [
+                    MinimalSource(
+                        file_path=src["file_path"],
+                        first_character_index=src["first_character_index"],
+                        last_character_index=src["last_character_index"]
+                    )
+                    for src in retrieved_sources_raw
+                ]
+
+                reversed_chunks = chunks[::-1]
+
+                generated_answer = self.generator.generate(
+                    query=question,
+                    chunks=reversed_chunks
                 )
-                for src in retrieved_sources_raw
-            ]
 
-            reversed_chunks = chunks[::-1]
-
-            generated_answer = self.generator.generate(
-                query=question,
-                chunks=reversed_chunks
-            )
-
-            answers_results.append(
-                StudentSearchResultsAndAnswer(
-                    question_id=question_id,
-                    question=question,
-                    retrieved_sources=chunks,
-                    answer=generated_answer
+                answers_results.append(
+                    StudentSearchResultsAndAnswer(
+                        question_id=question_id,
+                        question=question,
+                        search_results=chunks,
+                        answer=generated_answer,
+                        k=len(chunks)
+                    ).model_dump()
                 )
-            )
+            output_dict[key] = answers_results
 
         save_path = Path(save_directory)
         save_path.mkdir(parents=True, exist_ok=True)
         output_file = save_path / "student_answers.json"
 
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump([r.model_dump() for r in answers_results], f, indent=4)
+            json.dump(output_dict, f, indent=4)
 
         print(f"Saved student answers to {output_file}")
 
