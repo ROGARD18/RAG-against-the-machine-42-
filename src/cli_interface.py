@@ -27,6 +27,11 @@ class Cli:
     def __init__(self):
         self.generator = LlmModel()
 
+    @staticmethod
+    def tokenize_for_code(text: str) -> List[str]:
+        clean_text = text.replace('_', ' ').replace('-', ' ')
+        return [word for word in re.findall(r'\w+', clean_text.lower()) if len(word) > 2]
+
     def index(self, max_chunk_size: int = 2000) -> None:
         python_files, markdown_files = get_source_files()
         all_files = python_files + markdown_files
@@ -49,7 +54,7 @@ class Cli:
             file_text = file_cache[chunk.file_path]
             chunk_text = file_text[chunk.first_character_index:chunk.last_character_index]
 
-            tokens = [word for word in re.findall(r'\w+', chunk_text.lower()) if len(word) > 2]
+            tokens = self.tokenize_for_code(chunk_text)
             tokens_list.append(tokens)
 
         bm25 = BM25Okapi(tokens_list)
@@ -78,7 +83,7 @@ class Cli:
         all_chunks = data["chunks"]
         bm25 = data["bm25"]
 
-        tokenized_query = [word for word in re.findall(r'\w+', query.lower()) if len(word) > 2]
+        tokenized_query = self.tokenize_for_code(query)
         best_chunks = bm25.get_top_n(tokenized_query, all_chunks, n=k)
 
         return best_chunks
@@ -146,56 +151,59 @@ class Cli:
 
     def answer_dataset(self, student_search_results_path: str,
                        save_directory: str) -> None:
+
         input_path = Path(student_search_results_path)
         if not input_path.exists():
             print(f"Error: File '{student_search_results_path}' does not exist.")
             return
 
         with open(input_path, "r", encoding="utf-8") as f:
-            search_results_data = json.load(f)
+            data = json.load(f)
 
-        answers_results: List[StudentSearchResultsAndAnswer] = []
+        search_results_data = data.get("search_results", [])
+        k = data.get("k", 5)
 
-        output_dict = {}
-        for key, items in search_results_data.items():
-            for item in tqdm(items, desc="Generating answers"):
-                question_id: str | None = item.get("question_id", None)
-                question: str | None = item.get("question", None)
-                retrieved_sources_raw = item.get("retrieved_sources", [])
+        answers_results_list = []
 
-                chunks = [
-                    MinimalSource(
-                        file_path=src["file_path"],
-                        first_character_index=src["first_character_index"],
-                        last_character_index=src["last_character_index"]
-                    )
-                    for src in retrieved_sources_raw
-                ]
+        for item in tqdm(search_results_data, desc="Generating answers"):
+            question_id = item.get("question_id")
+            question = item.get("question")
+            retrieved_sources_raw = item.get("retrieved_sources", [])
 
-                reversed_chunks = chunks[::-1]
-
-                generated_answer = self.generator.generate(
-                    query=question,
-                    chunks=reversed_chunks
+            chunks = [
+                MinimalSource(
+                    file_path=src["file_path"],
+                    first_character_index=src["first_character_index"],
+                    last_character_index=src["last_character_index"]
                 )
+                for src in retrieved_sources_raw
+            ]
 
-                answers_results.append(
-                    StudentSearchResultsAndAnswer(
-                        question_id=question_id,
-                        question=question,
-                        search_results=chunks,
-                        answer=generated_answer,
-                        k=len(chunks)
-                    ).model_dump()
-                )
-            output_dict[key] = answers_results
+            reversed_chunks = chunks[::-1]
+
+            generated_answer = self.generator.generate(
+                query=question,
+                chunks=reversed_chunks
+            )
+
+            answers_results_list.append({
+                "question_id": question_id,
+                "question": question,
+                "retrieved_sources": retrieved_sources_raw,
+                "answer": generated_answer
+            })
+
+        final_output = {
+            "search_results": answers_results_list,
+            "k": k
+        }
 
         save_path = Path(save_directory)
         save_path.mkdir(parents=True, exist_ok=True)
         output_file = save_path / "student_answers.json"
 
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(output_dict, f, indent=4)
+            json.dump(final_output, f, indent=4)
 
         print(f"Saved student answers to {output_file}")
 
