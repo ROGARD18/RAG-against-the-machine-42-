@@ -5,7 +5,7 @@ install:
 	uv sync
 
 run:
-	@uv run python3 -m src index 1000
+	@uv run python3 -m src index 2000
 
 args:
 	@read -p "Entrez les arguments (ex: search 'ma question' --k 5) : " args; \
