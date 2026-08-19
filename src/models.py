@@ -36,7 +36,9 @@ class StudentSearchResults(BaseModel):
     search_results: List[MinimalSearchResults]
     k: int
 
-
 class StudentSearchResultsAndAnswer(BaseModel):
+    question_id: str
+    question: str
     search_results: List[MinimalSource]
+    answer: str
     k: int
