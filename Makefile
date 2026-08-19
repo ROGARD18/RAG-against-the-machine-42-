@@ -7,18 +7,18 @@ install:
 run:
 	@uv run python3 -m src index 1000
 
-test_args:
+args:
 	@read -p "Entrez les arguments (ex: search 'ma question' --k 5) : " args; \
 	uv run python -m src $$args
 
-test_s_d:
+search_dataset:
 	uv run python -m src search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json --k 10 --save_directory data/output/search_results/UnansweredQuestions
 
 
-test_a:
+answer:
 	uv run python -m src answer "How to configure OpenAi server ?" --k 15
 
-test_a_d:
+answer_dataset:
 	uv run python -m src answer_dataset --student_search_results_path data/output/search_results/UnansweredQuestions/dataset_docs_public.json --save_directory data/output/search_results_and_answer/UnansweredQuestions
 
 debug:
@@ -27,6 +27,8 @@ debug:
 
 clean:
 	@echo "Cleaning temporary files..."
+	rm -rf data/output
+	rm -rf data/processed
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
