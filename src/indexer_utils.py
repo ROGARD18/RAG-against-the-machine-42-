@@ -26,7 +26,11 @@ def get_source_files(raw_dir: str = "data/raw"
 
 def chunk_markdown(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
-    text = file_path.read_text(encoding="utf-8")
+    try:
+        text = file_path.read_text(encoding="utf-8")
+    except (PermissionError, FileExistsError, FileNotFoundError):
+        print(f"WARNING ! : Permission denied for {file_path}")
+        return []
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=max_chunk_size,
@@ -52,7 +56,12 @@ def chunk_markdown(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
 
 def chunk_python(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
-    text = file_path.read_text()
+    try:
+        text = file_path.read_text(encoding="utf-8")
+    except (PermissionError, FileExistsError, FileNotFoundError):
+        print(f"WARNING ! : Permission denied for {file_path}")
+        return []
+
 
     python_splitter = RecursiveCharacterTextSplitter.from_language(
         language=Language.PYTHON,
