@@ -1,0 +1,176 @@
+{
+    "search_results": [
+        {
+            "question_id": "c8095f4d-8770-4ba0-95c6-845c04c76cc7",
+            "question": "What API endpoint does vLLM support for chat completions?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/quickstart.md",
+                    "first_character_index": 8654,
+                    "last_character_index": 10460
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/reasoning_outputs.md",
+                    "first_character_index": 6713,
+                    "last_character_index": 8586
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/reasoning_outputs.md",
+                    "first_character_index": 3535,
+                    "last_character_index": 5345
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/skypilot.md",
+                    "first_character_index": 5292,
+                    "last_character_index": 7189
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/v1/kv_connector/nixl_integration/toy_proxy_server.py",
+                    "first_character_index": 7016,
+                    "last_character_index": 8760
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/benchmarks/README.md",
+                    "first_character_index": 5296,
+                    "last_character_index": 7234
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/serving/openai_compatible_server.md",
+                    "first_character_index": 1860,
+                    "last_character_index": 3007
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/cli/openai.py",
+                    "first_character_index": 3768,
+                    "last_character_index": 5264
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/v1/entrypoints/openai/test_completion.py",
+                    "first_character_index": 4184,
+                    "last_character_index": 5634
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/entrypoints/openai/test_transcription_validation.py",
+                    "first_character_index": 2713,
+                    "last_character_index": 4488
+                }
+            ],
+            "answer": "The chat completion endpoints in vLLM are specified in the **supported APIs** document. Specifically, the Chat Completions API is described as being used for text generation models with a chat template. However, the exact endpoint is not explicitly named in the provided context. Based on standard references, the endpoint is typically `/v1/chat/completions`.  \n\nAnswer: Information not found in context."
+        },
+        {
+            "question_id": "10bf9dae-d160-40bb-b3fb-6663494ee6fc",
+            "question": "How do you enable expert parallelism in vLLM for MoE models?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/configuration/optimization.md",
+                    "first_character_index": 5042,
+                    "last_character_index": 6939
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/config/parallel.py",
+                    "first_character_index": 2697,
+                    "last_character_index": 3301
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/serving/expert_parallel_deployment.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1977
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/serving/parallelism_scaling.md",
+                    "first_character_index": 1305,
+                    "last_character_index": 3173
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/serving/data_parallel_deployment.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1706
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/config/parallel.py",
+                    "first_character_index": 1073,
+                    "last_character_index": 3047
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/fused_moe/layer.py",
+                    "first_character_index": 28827,
+                    "last_character_index": 29795
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/serving/expert_parallel_deployment.md",
+                    "first_character_index": 1805,
+                    "last_character_index": 3310
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/contributing/model/basic.md",
+                    "first_character_index": 3742,
+                    "last_character_index": 4564
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/models/supported_models.md",
+                    "first_character_index": 23228,
+                    "last_character_index": 24866
+                }
+            ],
+            "answer": "To enable expert parallelism in vLLM for MoE models, specify the `--enable-expert-parallel` flag. This activates expert parallelism instead of tensor parallelism, allowing different expert networks to be distributed across GPUs."
+        },
+        {
+            "question_id": "5ff10124-c1fe-4d24-bec9-50ef3616d16f",
+            "question": "What does quantization trade off to reduce memory footprint in vLLM?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/README.md",
+                    "first_character_index": 0,
+                    "last_character_index": 579
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
+                    "first_character_index": 6704,
+                    "last_character_index": 8060
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/entrypoints/openai/test_optional_middleware.py",
+                    "first_character_index": 0,
+                    "last_character_index": 607
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/device_communicators/quick_all_reduce.py",
+                    "first_character_index": 5937,
+                    "last_character_index": 7761
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/compilation/cuda_graph.py",
+                    "first_character_index": 1169,
+                    "last_character_index": 3131
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/configuration/conserving_memory.md",
+                    "first_character_index": 1787,
+                    "last_character_index": 3724
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/usage/usage_stats.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1994
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/utils.py",
+                    "first_character_index": 9739,
+                    "last_character_index": 11140
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/cpu.md",
+                    "first_character_index": 9439,
+                    "last_character_index": 9926
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/engine/llm_engine.py",
+                    "first_character_index": 10070,
+                    "last_character_index": 12023
+                }
+            ],
+            "answer": "Quantization sacrifices model precision to reduce memory footprint. It lowers the accuracy of the model while enabling larger models to run efficiently across diverse hardware."
+        }
+    ],
+    "k": 10
+}
