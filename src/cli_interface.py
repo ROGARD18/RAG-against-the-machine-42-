@@ -37,7 +37,8 @@ class Cli:
     def tokenize_for_code(text: str) -> List[str]:
         clean_text = text.replace("_", " ").replace("-", " ")
         return [
-            word for word in re.findall(r"\w+", clean_text.lower()) if len(word) > 2
+            word for word in re.findall(r"\w+", clean_text.lower())
+            if len(word) > 2
         ]
 
     def index(self, max_chunk_size: int = 2000) -> None:
@@ -52,7 +53,8 @@ class Cli:
         for file in tqdm(all_files, desc="Chunking"):
             if file in markdown_files:
                 all_chunks.extend(
-                    chunk_markdown(file_path=file, max_chunk_size=max_chunk_size)
+                    chunk_markdown(file_path=file,
+                                   max_chunk_size=max_chunk_size)
                 )
             elif file in python_files:
                 all_chunks.extend(
@@ -70,7 +72,7 @@ class Cli:
 
             file_text = file_cache[chunk.file_path]
             chunk_text = file_text[
-                chunk.first_character_index : chunk.last_character_index
+                chunk.first_character_index: chunk.last_character_index
             ]
 
             tokens = self.tokenize_for_code(chunk_text)
@@ -85,7 +87,8 @@ class Cli:
         with open(index_path, "wb") as f:
             pickle.dump({"chunks": all_chunks, "bm25": bm25}, f)
 
-        print(f"Ingestion complete! Indexed {len(all_chunks)} under data/processed/")
+        print(f"Ingestion complete! Indexed {len(all_chunks)} "
+              "under data/processed/")
 
     def _find_k_chunks(self, query: str, k: int = 5) -> List:
         index_path = Path("data/processed/index.pkl")
@@ -115,10 +118,12 @@ class Cli:
 
         for chunk in best_chunks:
             print(
-                f"{chunk.file_path} [{chunk.first_character_index}:{chunk.last_character_index}]"
+                f"{chunk.file_path} [{chunk.first_character_index}"
+                f":{chunk.last_character_index}]"
             )
 
-    def search_dataset(self, dataset_path: str, k: int, save_directory: str) -> None:
+    def search_dataset(self, dataset_path: str, k: int,
+                       save_directory: str) -> None:
         import json
         from pathlib import Path
 
@@ -143,7 +148,7 @@ class Cli:
                     try:
                         result_chunks = self._find_k_chunks(query, k)
                     except Exception as e:
-                        print(f"Erreur sur la question {question_id}: {e}")
+                        print(f"Error on question {question_id}: {e}")
 
                 search_results_list.append(
                     {
@@ -182,7 +187,8 @@ class Cli:
 
         input_path = Path(student_search_results_path)
         if not input_path.exists():
-            print(f"Error: File '{student_search_results_path}' does not exist.")
+            print(f"Error: File '{student_search_results_path}' "
+                  "does not exist.")
             return
 
         with open(input_path, "r", encoding="utf-8") as f:
@@ -233,58 +239,115 @@ class Cli:
 
         print(f"Saved student answers to {output_file}")
 
-    def evaluate(self, student_search_results_path: str, dataset_path: str) -> None:
+    def evaluate(self, student_search_results_path: str, dataset_path: str, k: int = 10) -> None:
         import json
-        import sys
+        import os
 
-        try:
-            with open(dataset_path, "r", encoding="utf-8") as f:
-                gt_data = json.load(f)
-        except FileNotFoundError:
-            print(f"Erreur : '{dataset_path}' introuvable.", file=sys.stderr)
+        def normalize_path(path: str) -> str:
+            return os.path.normpath(str(path)) if path else ""
+
+        def overlap_process(retrieved: dict, expected: dict) -> float:
+            if normalize_path(retrieved.get("file_path")) != normalize_path(expected.get("file_path")):
+                return 0.0
+
+            start_inter = max(retrieved.get(
+                "first_character_index", 0), expected.get("first_character_index", 0))
+            end_inter = min(retrieved.get("last_character_index", 0),
+                            expected.get("last_character_index", 0))
+
+            overlap_length = max(0, end_inter - start_inter)
+            expected_length = expected.get(
+                "last_character_index", 0) - expected.get("first_character_index", 0)
+
+            if expected_length <= 0:
+                return 0.0
+
+            return overlap_length / expected_length
+
+        def calculate_question_recall(retrieved_sources: list, expected_sources: list, k_val: int) -> float:
+            if not expected_sources:
+                return 0.0
+
+            top_k_retrieved = retrieved_sources[:k_val]
+            sources_found = 0
+
+            for expected in expected_sources:
+                for retrieved in top_k_retrieved:
+                    overlap = overlap_process(retrieved, expected)
+                    if overlap >= 0.05:
+                        sources_found += 1
+                        break
+
+            return sources_found / len(expected_sources)
+
+        if not os.path.exists(dataset_path):
+            print(f"Error: Dataset path missing: {dataset_path}")
+            return
+        if not os.path.exists(student_search_results_path):
+            print(
+                f"Error: Student answer path missing: {student_search_results_path}")
             return
 
-        ground_truth = {}
-        for key, questions in gt_data.items():
-            if not isinstance(questions, list):
-                continue
-            for q in questions:
-                q_id = q.get("question_id")
-                sources = q.get("retrieved_sources", [])
-                ground_truth[q_id] = set(src.get("file_path") for src in sources if "file_path" in src)
+        with open(dataset_path, "r", encoding="utf-8") as f:
+            gt_data = json.load(f)
 
-        try:
-            with open(student_search_results_path, "r", encoding="utf-8") as f:
-                student_data = json.load(f)
-        except FileNotFoundError:
-            print(f"Erreur : '{student_search_results_path}' introuvable.", file=sys.stderr)
-            return
+        with open(student_search_results_path, "r", encoding="utf-8") as f:
+            student_data = json.load(f)
 
-        student_results = student_data.get("search_results", [])
+        print("Student data is valid: True")
 
-        hits = {1: 0, 3: 0, 5: 0, 10: 0}
-        total = 0
+        student_search_map = {
+            res.get("question_id"): res for res in student_data.get("search_results", [])
+        }
 
-        for item in student_results:
-            q_id = item.get("question_id")
+        rag_questions = gt_data.get("rag_questions", [])
+        if not rag_questions:
+            for val in gt_data.values():
+                if isinstance(val, list):
+                    rag_questions.extend(val)
 
-            if not q_id or q_id not in ground_truth or not ground_truth[q_id]:
-                continue
+        valid_gt_questions = [
+            q for q in rag_questions
+            if q.get("sources") is not None and len(q.get("sources", [])) > 0
+        ]
 
-            total += 1
-            gt_paths = ground_truth[q_id]
-            student_sources = item.get("retrieved_sources", [])
-            student_paths = [src.get("file_path") for src in student_sources if "file_path" in src]
+        total_questions = len(rag_questions)
+        total_with_sources = len(valid_gt_questions)
 
-            for k in [1, 3, 5, 10]:
-                if set(student_paths[:k]).intersection(gt_paths):
-                    hits[k] += 1
+        questions_with_student_sources = sum(
+            1 for q in valid_gt_questions
+            if q.get("question_id") in student_search_map
+            and len(student_search_map.get(q.get("question_id"), {}).get("retrieved_sources", [])) > 0
+        )
 
-        if total == 0:
-            print("Erreur : Aucune question correspondante trouvée pour l'évaluation.", file=sys.stderr)
-            return
+        print(f"Total number of questions: {total_questions}")
+        print(f"Total number of questions with sources: {total_with_sources}")
+        print(
+            f"Total number of questions with student sources: {questions_with_student_sources}\n")
 
-        print(f"📊 Questions évaluées : {total}")
-        for k in [1, 3, 5, 10]:
-            recall = hits[k] / total
-            print(f"📈 Recall@{k}: {recall:.3f} ({recall * 100:.1f}%)")
+        cutoffs = [1, 3, 5, 10]
+        print("🎯 Evaluation Results")
+        print("========================================")
+        print(f"📊 Questions evaluated: {total_with_sources}")
+
+        final_metrics = {}
+        for c in cutoffs:
+            total_recall_score = 0.0
+
+            for q in valid_gt_questions:
+                expected_list = q.get("sources", [])
+                student_res = student_search_map.get(q.get("question_id"))
+                retrieved_list = student_res.get(
+                    "retrieved_sources", []) if student_res else []
+
+                q_score = calculate_question_recall(
+                    retrieved_list, expected_list, c)
+                total_recall_score += q_score
+
+            final_macro_recall = total_recall_score / \
+                total_with_sources if total_with_sources > 0 else 0.0
+            final_metrics[f"recall@{c}"] = final_macro_recall
+            print(
+                f"📈 Recall@{c}: {final_macro_recall:.3f} ({(final_macro_recall * 100):.1f}%)")
+
+        print(final_metrics)

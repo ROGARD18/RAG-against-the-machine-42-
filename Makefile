@@ -1,4 +1,4 @@
-.PHONY: install run debug clean lint lint-strict help
+.PHONY: install run debug clean lint search search_dataset answer answer_dataset moulinette
 
 install:
 	@echo "Installing dependencies with uv..."
@@ -11,7 +11,7 @@ search:
 	uv run python -m src search 'how to configure openai server' --k 5
 
 search_dataset:
-	uv run python -m src search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json --k 10 --save_directory data/output/search_results/UnansweredQuestions
+	uv run python -m src search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_code_public.json --k 10 --save_directory data/output/search_results/UnansweredQuestions
 
 
 answer:
@@ -21,7 +21,11 @@ answer_dataset:
 	uv run python -m src answer_dataset --student_search_results_path data/output/search_results/UnansweredQuestions/dataset_docs_public.json --save_directory data/output/search_results_and_answer/UnansweredQuestions
 
 evaluate:
-	uv run python -m src evaluate data/output/search_results/UnansweredQuestions/dataset_docs_public.json data/datasets/AnsweredQuestions/dataset_docs_public.json
+	uv run python -m src evaluate data/output/search_results/UnansweredQuestions/dataset_code_public.json data/datasets/AnsweredQuestions/dataset_code_public.json
+
+moulinette:
+	./moulinette evaluate_student_search_results data/output/search_results/UnansweredQuestions/dataset_code_public.json data/datasets/AnsweredQuestions/dataset_code_public.json --k 10
+
 
 debug:
 	@echo "Running in debug mode..."
