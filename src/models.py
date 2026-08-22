@@ -1,5 +1,7 @@
+import uuid
+from typing import List, Union
+
 from pydantic import BaseModel, Field
-from typing import List
 
 
 class MinimalSource(BaseModel):
@@ -9,7 +11,9 @@ class MinimalSource(BaseModel):
 
 
 class UnansweredQuestion(BaseModel):
-    question_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    question_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4())
+    )
     question: str
 
 
@@ -19,7 +23,7 @@ class AnswerQuestion(UnansweredQuestion):
 
 
 class RagDataset(BaseModel):
-    rag_questions: List[AnswerQuestion | UnansweredQuestion]
+    rag_questions: List[Union[AnswerQuestion, UnansweredQuestion]]
 
 
 class MinimalSearchResults(BaseModel):

@@ -1,12 +1,14 @@
 from pathlib import Path
 from typing import List, Tuple
+
+from langchain_text_splitters import Language, RecursiveCharacterTextSplitter
+
 from src.models import MinimalSource
-from langchain_text_splitters import (
-    MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter, Language)
 
 
-def get_source_files(raw_dir: str = "data/raw"
-                     ) -> Tuple[List[Path], List[Path]]:
+def get_source_files(
+    raw_dir: str = "data/raw"
+) -> Tuple[List[Path], List[Path]]:
     base_path = Path(raw_dir)
     python_files: List[Path] = []
     markdown_files: List[Path] = []
@@ -24,7 +26,9 @@ def get_source_files(raw_dir: str = "data/raw"
     return (python_files, markdown_files)
 
 
-def chunk_markdown(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
+def chunk_markdown(
+    file_path: Path, max_chunk_size: int
+) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
     try:
         text = file_path.read_text(encoding="utf-8")
@@ -54,7 +58,9 @@ def chunk_markdown(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
     return chunks
 
 
-def chunk_python(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
+def chunk_python(
+    file_path: Path, max_chunk_size: int
+) -> List[MinimalSource]:
     chunks: List[MinimalSource] = []
     try:
         text = file_path.read_text(encoding="utf-8")
@@ -62,11 +68,10 @@ def chunk_python(file_path: Path, max_chunk_size: int) -> List[MinimalSource]:
         print(f"WARNING ! : Permission denied for {file_path}")
         return []
 
-
     python_splitter = RecursiveCharacterTextSplitter.from_language(
         language=Language.PYTHON,
         chunk_size=max_chunk_size,
-        chunk_overlap=int(max_chunk_size / 5),
+        chunk_overlap=max_chunk_size // 5,
         add_start_index=True
     )
 
