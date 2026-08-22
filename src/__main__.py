@@ -1,3 +1,5 @@
+"""Entry point for the RAG CLI application."""
+
 from typing import Any, Callable
 
 import fire

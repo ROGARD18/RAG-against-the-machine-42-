@@ -1,3 +1,5 @@
+"""Utility functions for reading files and chunking text."""
+
 from pathlib import Path
 from typing import List, Tuple
 
@@ -9,6 +11,14 @@ from src.models import MinimalSource
 def get_source_files(
     raw_dir: str = "data/raw"
 ) -> Tuple[List[Path], List[Path]]:
+    """Retrieve all Python and Markdown files from the raw data directory.
+
+    Args:
+        raw_dir: The root directory containing the raw source files.
+
+    Returns:
+        A tuple containing two lists of Paths: (python_files, markdown_files).
+    """
     base_path = Path(raw_dir)
     python_files: List[Path] = []
     markdown_files: List[Path] = []
@@ -29,6 +39,15 @@ def get_source_files(
 def chunk_markdown(
     file_path: Path, max_chunk_size: int
 ) -> List[MinimalSource]:
+    """Split a Markdown file into smaller text chunks.
+
+    Args:
+        file_path: The path to the Markdown file.
+        max_chunk_size: The maximum allowed size for a single chunk.
+
+    Returns:
+        A list of MinimalSource objects representing the chunks.
+    """
     chunks: List[MinimalSource] = []
     try:
         text = file_path.read_text(encoding="utf-8")
@@ -61,6 +80,15 @@ def chunk_markdown(
 def chunk_python(
     file_path: Path, max_chunk_size: int
 ) -> List[MinimalSource]:
+    """Split a Python file into smaller chunks, respecting language syntax.
+
+    Args:
+        file_path: The path to the Python file.
+        max_chunk_size: The maximum allowed size for a single chunk.
+
+    Returns:
+        A list of MinimalSource objects representing the chunks.
+    """
     chunks: List[MinimalSource] = []
     try:
         text = file_path.read_text(encoding="utf-8")

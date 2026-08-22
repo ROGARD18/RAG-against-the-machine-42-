@@ -1,3 +1,5 @@
+"""Module for loading and interacting with the local LLM."""
+
 import re
 from typing import Any, Dict, List, Optional
 
@@ -7,20 +9,35 @@ from src.models import MinimalSource
 
 
 class LlmModel:
+    """Handles prompt construction and text generation using a local LLM."""
+
     def __init__(self) -> None:
+        """Initialize the LlmModel without loading weights into memory."""
         self.model_id: str = "Qwen/Qwen3-0.6B"
         self.tokenizer: Optional[Any] = None
         self.model: Optional[Any] = None
 
     def _load_model(self) -> None:
+        """Load the model and tokenizer into memory if not already loaded."""
         if self.model is None:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
             self.model = AutoModelForCausalLM.from_pretrained(self.model_id)
 
     def generate(self, query: str, chunks: List[MinimalSource]) -> str:
+        """Generate an answer to a query based on the provided source chunks.
+
+        Args:
+            query: The user's question.
+            chunks: A list of relevant source chunks to use as context.
+
+        Returns:
+            The generated answer as a plain text string.
+
+        Raises:
+            RuntimeError: If the model or tokenizer fails to load.
+        """
         self._load_model()
 
-        # Sécurité pour Mypy : on s'assure que les modèles sont bien chargés
         if self.tokenizer is None or self.model is None:
             raise RuntimeError("Le modèle ou le tokenizer n'a pas été chargé.")
 
@@ -105,6 +122,14 @@ class LlmModel:
         return clean_answer
 
     def _get_chunk_text(self, chunk: MinimalSource) -> str:
+        """Extract the exact text content for a given chunk from its file.
+
+        Args:
+            chunk: The source chunk metadata.
+
+        Returns:
+            The raw string content of the chunk.
+        """
         with open(chunk.file_path, "r", encoding="utf-8") as f:
             content = f.read()
         return content[chunk.first_character_index:chunk.last_character_index]

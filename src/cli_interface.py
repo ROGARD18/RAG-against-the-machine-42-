@@ -1,3 +1,5 @@
+"""Command-line interface commands for the RAG pipeline."""
+
 import json
 import os
 import pickle
@@ -15,17 +17,27 @@ from src.models import MinimalSource
 
 
 class CliError(Exception):
+    """Custom exception for CLI-related errors."""
     pass
 
 
 class Cli:
-    """Interface class."""
+    """Main interface class exposing the RAG pipeline commands."""
 
     def __init__(self) -> None:
+        """Initialize the CLI with the LLM generator."""
         self.generator = LlmModel()
 
     @staticmethod
     def tokenize_for_code(text: str) -> List[str]:
+        """Tokenize text specifically for code and technical documentation.
+
+        Args:
+            text: The raw text string to tokenize.
+
+        Returns:
+            A list of string tokens.
+        """
         clean_text = text.replace("_", " ").replace("-", " ")
         return [
             word for word in re.findall(r"\w+", clean_text.lower())
@@ -33,6 +45,11 @@ class Cli:
         ]
 
     def index(self, max_chunk_size: int = 2000) -> None:
+        """Ingest raw data and build the BM25 search index.
+
+        Args:
+            max_chunk_size: The maximum size of each text chunk.
+        """
         python_files, markdown_files = get_source_files()
         all_files = python_files + markdown_files
 
@@ -85,6 +102,18 @@ class Cli:
         )
 
     def _find_k_chunks(self, query: str, k: int = 5) -> List[MinimalSource]:
+        """Retrieve the top-k chunks from the index for a given query.
+
+        Args:
+            query: The user's search query.
+            k: The maximum number of chunks to return.
+
+        Returns:
+            A list of the top-k MinimalSource chunks.
+
+        Raises:
+            FileNotFoundError: If the index has not been built yet.
+        """
         index_path = Path("data/processed/index.pkl")
 
         if not index_path.exists():
@@ -105,6 +134,12 @@ class Cli:
         return best_chunks
 
     def search(self, query: str, k: int = 5) -> None:
+        """Search the index and print the top-k source locations.
+
+        Args:
+            query: The user's search query.
+            k: The maximum number of results to display.
+        """
         try:
             best_chunks = self._find_k_chunks(query, k)
         except FileNotFoundError as e:
@@ -120,6 +155,13 @@ class Cli:
     def search_dataset(
         self, dataset_path: str, k: int, save_directory: str
     ) -> None:
+        """Run the search operation over an entire dataset of questions.
+
+        Args:
+            dataset_path: Path to the input JSON dataset.
+            k: The number of sources to retrieve per question.
+            save_directory: Directory where the output JSON will be saved.
+        """
         with open(dataset_path, "r", encoding="utf-8") as f:
             questions_dict = json.load(f)
 
@@ -163,6 +205,12 @@ class Cli:
             json.dump(final_output, f, indent=4)
 
     def answer(self, query: str, k: int = 5) -> None:
+        """Generate an answer for a single query using retrieved context.
+
+        Args:
+            query: The user's question.
+            k: The number of sources to retrieve for context.
+        """
         try:
             chunks: List[MinimalSource] = self._find_k_chunks(
                 query=query, k=k
@@ -179,6 +227,12 @@ class Cli:
     def answer_dataset(
         self, student_search_results_path: str, save_directory: str
     ) -> None:
+        """Generate answers for an entire dataset of search results.
+
+        Args:
+            student_search_results_path: Path to the search results JSON.
+            save_directory: Directory to save the final answers JSON.
+        """
         input_path = Path(student_search_results_path)
         if not input_path.exists():
             print(
@@ -241,6 +295,13 @@ class Cli:
         dataset_path: str,
         k: int = 10
     ) -> None:
+        """Evaluate retrieval performance by calculating Recall@K.
+
+        Args:
+            student_search_results_path: Path to the student's search output.
+            dataset_path: Path to the ground truth dataset.
+            k: The maximum number of retrieved sources to consider.
+        """
         def normalize_path(path: str) -> str:
             return os.path.normpath(str(path)) if path else ""
 
